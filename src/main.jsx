@@ -15,6 +15,7 @@ import Login from '../src/pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import CourseModules from './pages/CourseModules.jsx';
 import ProtectedRoute from './components/ProtectedRoute'; // Import the ProtectedRoute component
+import ProfilePage from './pages/ProfilePage.jsx';
 
 const router = createBrowserRouter([
   {
@@ -46,6 +47,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <CourseModules />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'profile',
+        element: (
+          <ProtectedRoute>
+            <ProfilePage />
           </ProtectedRoute>
         ),
       },

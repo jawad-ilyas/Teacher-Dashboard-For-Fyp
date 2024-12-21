@@ -104,6 +104,45 @@ export const fetchCategories = createAsyncThunk(
     }
 );
 
+
+
+
+// Async thunk to add a student to a course
+export const addStudentToCourse = createAsyncThunk(
+    "courses/addStudentToCourse",
+    async ({ courseId, email }, { rejectWithValue }) => {
+        try {
+            const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+            if (!userInfo) throw new Error("userInfo not found");
+
+            const token = userInfo?.data?.token; // Get token from userInfo
+            const teacherId = userInfo?.data?._id; // Get teacher ID from userInfo
+
+            if (!token || !teacherId) {
+                throw new Error("Authentication details are incomplete");
+            }
+
+            // Make the API call
+            const response = await axios.post(
+                `${API_URL}/${courseId}/add-student`,
+                { email, teacherId }, // Pass teacherId and email in the body
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`, // Pass token in the Authorization header
+                    },
+                }
+            );
+
+            return response.data; // Expecting success message
+        } catch (error) {
+            return rejectWithValue(error.response?.data || "Failed to add student");
+        }
+    }
+);
+
+
+
+
 // Redux slice for courses
 const courseSlice = createSlice({
     name: "courses",
@@ -210,6 +249,20 @@ const courseSlice = createSlice({
                 state.categories = action.payload || []; // Ensure categories is always an array
             })
             .addCase(fetchCategories.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            // Handle add student to course
+            .addCase(addStudentToCourse.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+                state.successMessage = null;
+            })
+            .addCase(addStudentToCourse.fulfilled, (state, action) => {
+                state.loading = false;
+                state.successMessage = action.payload.message; // Assuming response contains a message
+            })
+            .addCase(addStudentToCourse.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             });

@@ -2,59 +2,67 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { addModule } from "../features/module/ModuleSlice";
+import { addStudentToCourse } from "../features/course/CourseSlice";
 import { useNavigate } from "react-router-dom";
+import ModuleModal from "./ModuleModel";
+import AddStudentModal from "./AddStudentModal";
 
-import ModuleModal from "./moduleModel";
 const Card = ({ title, category, image, onEdit, onDelete, courseId }) => {
     const dispatch = useDispatch();
-    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isModuleModalVisible, setIsModuleModalVisible] = useState(false);
+    const [isAddStudentModalVisible, setIsAddStudentModalVisible] = useState(false);
     const navigate = useNavigate();
 
     const handleAddModule = (moduleData) => {
-        // Get the teacher ID from localStorage
         const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
-        // Build the payload
-        console.log("printing the course id of the card component ", courseId)
-        console.log("printing the teacherId of the card component ", userInfo?.data?._id)
         const payload = {
             ...moduleData,
-            courseId: courseId, // Pass the course ID from props
-            teacherId: userInfo?.data?._id, // Get the teacher ID from localStorage
+            courseId,
+            teacherId: userInfo?.data?._id,
         };
 
-        // Dispatch the addModule action
         dispatch(addModule(payload));
-        setIsModalVisible(false); // Close the modal after dispatch
+        setIsModuleModalVisible(false);
+    };
+
+    const handleAddStudent = async (studentData) => {
+        try {
+            const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+
+            const payload = {
+                ...studentData,
+                courseId,
+                teacherId: userInfo?.data?._id,
+            };
+
+            await dispatch(addStudentToCourse(payload)).unwrap();
+            setIsAddStudentModalVisible(false);
+        } catch (error) {
+            console.error("Failed to add student:", error);
+        }
     };
 
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            {/* Course Image */}
             <img
                 src={image}
                 alt={title}
                 className="w-full h-32 object-cover cursor-pointer"
-                onClick={() => navigate(`/courses/${courseId}`)} // Navigate to CourseModules page
+                onClick={() => navigate(`/courses/${courseId}`)}
             />
 
-            {/* Course Details */}
             <div className="p-4 flex justify-between items-center">
-                {/* Left Column: Title and Category */}
                 <div>
                     <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
                     <p className="text-gray-600 text-sm">Category: {category}</p>
                 </div>
-
-                {/* Right Column: Icons */}
                 <div className="flex space-x-3">
-                    {/* Edit Icon */}
                     <FaEdit
                         onClick={onEdit}
                         className="text-blue-600 hover:text-blue-800 cursor-pointer"
                         title="Edit Course"
                     />
-                    {/* Delete Icon */}
                     <FaTrash
                         onClick={onDelete}
                         className="text-red-600 hover:text-red-800 cursor-pointer"
@@ -63,22 +71,40 @@ const Card = ({ title, category, image, onEdit, onDelete, courseId }) => {
                 </div>
             </div>
 
-            {/* Add Module Button */}
             <div className="p-4 border-t">
                 <button
-                    onClick={() => setIsModalVisible(true)}
-                    className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300"
+                    onClick={() => setIsModuleModalVisible(true)}
+                    className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300 mb-2"
                 >
                     Add Module
                 </button>
+                <button
+                    onClick={() => setIsAddStudentModalVisible(true)}
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 mb-2"
+                >
+                    Add a Student
+                </button>
+                <button
+                    onClick={() => navigate(`/courses/${courseId}/enrolled-students`)}
+                    className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition duration-300"
+                >
+                    Enrolled Students
+                </button>
             </div>
 
-            {/* Module Modal */}
-            {isModalVisible && (
+            {isModuleModalVisible && (
                 <ModuleModal
-                    isVisible={isModalVisible}
-                    onClose={() => setIsModalVisible(false)}
-                    onSubmit={handleAddModule} // Pass the handleAddModule function
+                    isVisible={isModuleModalVisible}
+                    onClose={() => setIsModuleModalVisible(false)}
+                    onSubmit={handleAddModule}
+                />
+            )}
+
+            {isAddStudentModalVisible && (
+                <AddStudentModal
+                    isVisible={isAddStudentModalVisible}
+                    onClose={() => setIsAddStudentModalVisible(false)}
+                    onSubmit={handleAddStudent}
                 />
             )}
         </div>
